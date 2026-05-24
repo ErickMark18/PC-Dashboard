@@ -4,7 +4,7 @@ import csv
 import io
 import json
 import zlib
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime, String, Text
@@ -15,6 +15,13 @@ from config import settings
 
 Base = declarative_base()
 
+_CEST = timezone(timedelta(hours=2))
+
+
+def _now() -> datetime:
+    """Return current time in CEST (UTC+2)."""
+    return datetime.now(_CEST)
+
 
 class MetricRecord(Base):
     """Single metric snapshot stored in database."""
@@ -22,7 +29,7 @@ class MetricRecord(Base):
     __tablename__ = "metrics"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=_now)
     cpu_percent = Column(Float)
     cpu_temp = Column(Float, nullable=True)
     memory_percent = Column(Float)
@@ -43,7 +50,7 @@ class AlertRecord(Base):
     __tablename__ = "alerts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=_now)
     metric_name = Column(String(50))
     threshold_value = Column(Float)
     actual_value = Column(Float)
@@ -69,7 +76,7 @@ class MachineRegistry(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     machine_id = Column(String(64), unique=True)
     machine_name = Column(String(128))
-    last_seen = Column(DateTime, default=datetime.utcnow)
+    last_seen = Column(DateTime, default=_now)
     ip_address = Column(String(45), nullable=True)
 
 
@@ -80,7 +87,7 @@ class MachineMetricSnapshot(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     machine_id = Column(String(64))
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=_now)
     cpu_percent = Column(Float)
     memory_percent = Column(Float)
     disk_percent = Column(Float)
@@ -97,7 +104,7 @@ class ConfigStore(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String(64), unique=True)
     value = Column(Text)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=_now)
 
 
 engine = create_engine(settings.DATABASE_URL, echo=False)
@@ -173,7 +180,7 @@ def set_config(key: str, value: str) -> None:
         record = session.query(ConfigStore).filter(ConfigStore.key == key).first()
         if record:
             record.value = value
-            record.updated_at = datetime.utcnow()
+            record.updated_at = _now()
         else:
             session.add(ConfigStore(key=key, value=value))
         session.commit()
@@ -198,9 +205,9 @@ def _update_peaks(session, metrics: dict) -> None:
         if existing:
             if value > existing.peak_value:
                 existing.peak_value = value
-                existing.peak_timestamp = datetime.utcnow()
+                existing.peak_timestamp = _now()
         else:
-            session.add(PeakRecord(metric_name=name, peak_value=value, peak_timestamp=datetime.utcnow()))
+            session.add(PeakRecord(metric_name=name, peak_value=value, peak_timestamp=_now()))
 
 
 def save_alert(alert_message: str, metric_name: str, threshold: float, actual: float) -> AlertRecord:
@@ -242,7 +249,7 @@ def get_alert_history(hours: int = 24, limit: int = 100) -> list[dict]:
     from datetime import timedelta
 
     session = SessionLocal()
-    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    cutoff = _now() - timedelta(hours=hours)
     records = (
         session.query(AlertRecord)
         .filter(AlertRecord.timestamp >= cutoff)
@@ -296,7 +303,7 @@ def get_history(hours: int = 24) -> list[dict]:
     from datetime import timedelta
 
     session = SessionLocal()
-    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    cutoff = _now() - timedelta(hours=hours)
     records = (
         session.query(MetricRecord)
         .filter(MetricRecord.timestamp >= cutoff)
@@ -372,7 +379,7 @@ def register_machine(machine_id: str, machine_name: str, ip_address: str = None)
     existing = session.query(MachineRegistry).filter(MachineRegistry.machine_id == machine_id).first()
     if existing:
         existing.machine_name = machine_name
-        existing.last_seen = datetime.utcnow()
+        existing.last_seen = _now()
         if ip_address:
             existing.ip_address = ip_address
         session.commit()
