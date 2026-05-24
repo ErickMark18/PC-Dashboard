@@ -29,7 +29,7 @@ Sistema de monitorización de métricas de máquina local (CPU, RAM, temperatura
 - **Exportación**: CSV y JSON del historial
 - **Tema claro/oscuro**: Toggle en el dashboard
 - **Top procesos**: Ver los procesos que más CPU/RAM consumen
-- **Multi-máquina**: Soporte para监控 múltiples PCs (API REST completa)
+- **Multi-máquina**: Soporte para múltiples PCs (API REST completa)
 
 ## Requisitos
 
