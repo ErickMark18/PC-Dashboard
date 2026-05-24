@@ -161,7 +161,7 @@ def _get_process_metrics() -> dict:
             try:
                 processes.append({
                     "name": proc.info["name"] or "Unknown",
-                    "cpu_percent": proc.info["cpu_percent"] or 0.0,
+                    "cpu_percent": (proc.info["cpu_percent"] or 0.0) / psutil.cpu_count() if psutil.cpu_count() else 0.0,
                     "memory_percent": proc.info["memory_percent"] or 0.0,
                 })
             except (psutil.NoSuchProcess, psutil.AccessDenied):

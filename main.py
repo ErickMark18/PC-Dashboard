@@ -5,7 +5,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status, Query, Header
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status, Query, Header, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
@@ -193,7 +193,7 @@ async def reset_thresholds():
 
 
 @app.patch("/thresholds/{threshold_name}")
-async def update_threshold_endpoint(threshold_name: str, value: float):
+async def update_threshold_endpoint(threshold_name: str, value: float = Body(...)):
     """Update a threshold value dynamically."""
     valid_names = ["cpu_threshold", "ram_threshold", "disk_threshold", "temp_threshold", "gpu_threshold"]
     if threshold_name not in valid_names:

@@ -5,13 +5,36 @@ from typing import List, Optional
 from config import settings
 
 
-_current_thresholds = {
-    "cpu_threshold": settings.CPU_THRESHOLD,
-    "ram_threshold": settings.RAM_THRESHOLD,
-    "disk_threshold": settings.DISK_THRESHOLD,
-    "temp_threshold": settings.TEMP_THRESHOLD,
-    "gpu_threshold": settings.GPU_THRESHOLD,
-}
+def _load_thresholds_from_db() -> dict:
+    """Load thresholds from database, fallback to settings."""
+    try:
+        from database import get_config
+        thresholds = {}
+        for key in ["cpu_threshold", "ram_threshold", "disk_threshold", "temp_threshold", "gpu_threshold"]:
+            value = get_config(key)
+            if value is not None:
+                thresholds[key] = float(value)
+            else:
+                defaults = {
+                    "cpu_threshold": settings.CPU_THRESHOLD,
+                    "ram_threshold": settings.RAM_THRESHOLD,
+                    "disk_threshold": settings.DISK_THRESHOLD,
+                    "temp_threshold": settings.TEMP_THRESHOLD,
+                    "gpu_threshold": settings.GPU_THRESHOLD,
+                }
+                thresholds[key] = defaults.get(key, 80.0)
+        return thresholds
+    except Exception:
+        return {
+            "cpu_threshold": settings.CPU_THRESHOLD,
+            "ram_threshold": settings.RAM_THRESHOLD,
+            "disk_threshold": settings.DISK_THRESHOLD,
+            "temp_threshold": settings.TEMP_THRESHOLD,
+            "gpu_threshold": settings.GPU_THRESHOLD,
+        }
+
+
+_current_thresholds = _load_thresholds_from_db()
 
 
 def check_alerts(metrics: dict, save_alerts: bool = True) -> List[str]:
@@ -82,4 +105,9 @@ def update_threshold(name: str, value: float) -> dict:
     """
     if name in _current_thresholds:
         _current_thresholds[name] = value
+        try:
+            from database import set_config
+            set_config(name, str(value))
+        except Exception:
+            pass
     return _current_thresholds.copy()

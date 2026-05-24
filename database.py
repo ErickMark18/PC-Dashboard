@@ -89,6 +89,17 @@ class MachineMetricSnapshot(Base):
     network_recv_mb = Column(Float)
 
 
+class ConfigStore(Base):
+    """Persistent configuration store for thresholds and settings."""
+
+    __tablename__ = "config"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String(64), unique=True)
+    value = Column(Text)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
 engine = create_engine(settings.DATABASE_URL, echo=False)
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
@@ -126,10 +137,48 @@ def save_metric(metrics: dict, significant_change: bool = True) -> Optional[Metr
         session.add(record)
         session.commit()
         session.refresh(record)
-        return record
     except Exception:
         session.rollback()
-        return None
+    finally:
+        session.close()
+    return record
+
+
+def get_config(key: str, default: str | None = None) -> str | None:
+    """Get a configuration value from the database.
+
+    Args:
+        key: Configuration key.
+        default: Default value if key not found.
+
+    Returns:
+        Configuration value or default.
+    """
+    session = SessionLocal()
+    record = session.query(ConfigStore).filter(ConfigStore.key == key).first()
+    value = record.value if record else default
+    session.close()
+    return value
+
+
+def set_config(key: str, value: str) -> None:
+    """Set a configuration value in the database.
+
+    Args:
+        key: Configuration key.
+        value: Configuration value.
+    """
+    session = SessionLocal()
+    try:
+        record = session.query(ConfigStore).filter(ConfigStore.key == key).first()
+        if record:
+            record.value = value
+            record.updated_at = datetime.utcnow()
+        else:
+            session.add(ConfigStore(key=key, value=value))
+        session.commit()
+    except Exception:
+        session.rollback()
     finally:
         session.close()
 
