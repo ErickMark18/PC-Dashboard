@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  dashboard:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DASHBOARD_CPU_THRESHOLD=90
+      - DASHBOARD_RAM_THRESHOLD=85
+      - DASHBOARD_DISK_THRESHOLD=90
+      - DASHBOARD_SAVE_INTERVAL=60
+    restart: unless-stopped

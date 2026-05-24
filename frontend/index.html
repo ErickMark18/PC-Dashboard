@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #38bdf8;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+        .status-dot.disconnected {
+            background: #ef4444;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .metric-card .label {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        .metric-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .metric-card .unit {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .metric-card.warning {
+            border: 2px solid #f59e0b;
+        }
+        .metric-card.critical {
+            border: 2px solid #ef4444;
+        }
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        .chart-box {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .chart-box h3 {
+            margin-bottom: 12px;
+            color: #38bdf8;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 200px;
+        }
+        #alertBanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ef4444;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            z-index: 1000;
+        }
+        #alertBanner.show {
+            display: block;
+        }
+        .network-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 10px;
+        }
+        .network-stat {
+            text-align: center;
+        }
+        .network-stat .arrow {
+            font-size: 20px;
+        }
+        .network-stat .label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .network-stat .value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="alertBanner"></div>
+    <div class="header">
+        <h1>PC Dashboard</h1>
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connected</span>
+        </div>
+    </div>
+    <div class="metrics-grid">
+        <div class="metric-card" id="cpuCard">
+            <div class="label">CPU</div>
+            <div class="value" id="cpuValue">0</div>
+            <div class="unit">%</div>
+        </div>
+        <div class="metric-card" id="ramCard">
+            <div class="label">RAM</div>
+            <div class="value" id="ramValue">0</div>
+            <div class="unit">%</div>
+        </div>
+        <div class="metric-card" id="diskCard">
+            <div class="label">Disk</div>
+            <div class="value" id="diskValue">0</div>
+            <div class="unit">%</div>
+        </div>
+        <div class="metric-card" id="tempCard">
+            <div class="label">CPU Temp</div>
+            <div class="value" id="tempValue">-</div>
+            <div class="unit" id="tempUnit">°C</div>
+        </div>
+    </div>
+    <div class="charts-container">
+        <div class="chart-box">
+            <h3>CPU & RAM (%)</h3>
+            <div class="chart-wrapper">
+                <canvas id="cpuRamChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-box">
+            <h3>Disk Usage (%)</h3>
+            <div class="chart-wrapper">
+                <canvas id="diskChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="chart-box" style="margin-top: 20px;">
+        <h3>Network Activity</h3>
+        <div class="network-stats">
+            <div class="network-stat">
+                <div class="arrow">↑</div>
+                <div class="label">Sent</div>
+                <div class="value" id="netSent">0 MB</div>
+            </div>
+            <div class="network-stat">
+                <div class="arrow">↓</div>
+                <div class="label">Received</div>
+                <div class="value" id="netRecv">0 MB</div>
+            </div>
+        </div>
+    </div>
+    <div class="chart-box" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">History (Last 24h)</h3>
+            <button id="loadHistory" style="padding: 6px 12px; background: #38bdf8; border: none; border-radius: 6px; color: #0f172a; cursor: pointer;">Load History</button>
+        </div>
+        <div class="chart-wrapper" style="height: 150px;">
+            <canvas id="historyChart"></canvas>
+        </div>
+        <div id="historyStats" style="margin-top: 10px; font-size: 14px; color: #94a3b8;"></div>
+    </div>
+    <script>
+        let historyChart = null;
+        const MAX_DATA_POINTS = 60;
+        let cpuData = [];
+        let ramData = [];
+        let diskData = [];
+        let labels = [];
+
+        const cpuRamCtx = document.getElementById('cpuRamChart').getContext('2d');
+        const diskCtx = document.getElementById('diskChart').getContext('2d');
+
+        const cpuRamChart = new Chart(cpuRamCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'CPU %',
+                        data: cpuData,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'RAM %',
+                        data: ramData,
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 100, grid: { color: '#334155' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#e2e8f0' } } }
+            }
+        });
+
+        const diskChart = new Chart(diskCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Disk %',
+                    data: diskData,
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 100, grid: { color: '#334155' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#e2e8f0' } } }
+            }
+        });
+
+        function updateChart(chart, dataArray, value) {
+            dataArray.push(value);
+            if (dataArray.length > MAX_DATA_POINTS) {
+                dataArray.shift();
+            }
+            chart.update('none');
+        }
+
+        function addLabel() {
+            const now = new Date().toLocaleTimeString();
+            labels.push(now);
+            if (labels.length > MAX_DATA_POINTS) {
+                labels.shift();
+            }
+        }
+
+        function updateMetricCard(elementId, value, threshold, criticalThreshold) {
+            const card = document.getElementById(elementId);
+            card.classList.remove('warning', 'critical');
+            if (value >= criticalThreshold) {
+                card.classList.add('critical');
+            } else if (value >= threshold) {
+                card.classList.add('warning');
+            }
+        }
+
+        let ws;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+        const thresholds = { cpu: 90, ram: 85, disk: 90 };
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = () => {
+                document.getElementById('statusDot').classList.remove('disconnected');
+                document.getElementById('statusText').textContent = 'Connected';
+                reconnectAttempts = 0;
+            };
+
+            ws.onclose = () => {
+                document.getElementById('statusDot').classList.add('disconnected');
+                document.getElementById('statusText').textContent = 'Disconnected';
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    setTimeout(connect, 2000 * reconnectAttempts);
+                }
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const metrics = data.metrics;
+
+                document.getElementById('cpuValue').textContent = metrics.cpu_percent.toFixed(1);
+                document.getElementById('ramValue').textContent = metrics.memory_percent.toFixed(1);
+                document.getElementById('diskValue').textContent = metrics.disk_percent.toFixed(1);
+
+                if (metrics.cpu_temp !== null) {
+                    document.getElementById('tempValue').textContent = metrics.cpu_temp.toFixed(1);
+                } else {
+                    document.getElementById('tempValue').textContent = 'N/A';
+                }
+
+                document.getElementById('netSent').textContent = metrics.network_sent_mb.toFixed(1) + ' MB';
+                document.getElementById('netRecv').textContent = metrics.network_recv_mb.toFixed(1) + ' MB';
+
+                updateMetricCard('cpuCard', metrics.cpu_percent, 70, thresholds.cpu);
+                updateMetricCard('ramCard', metrics.memory_percent, 70, thresholds.ram);
+                updateMetricCard('diskCard', metrics.disk_percent, 75, thresholds.disk);
+
+                addLabel();
+                updateChart(cpuRamChart, cpuData, metrics.cpu_percent);
+                updateChart(cpuRamChart, ramData, metrics.memory_percent);
+                updateChart(diskChart, diskData, metrics.disk_percent);
+
+                if (data.alerts && data.alerts.length > 0) {
+                    showAlert(data.alerts);
+                } else {
+                    hideAlert();
+                }
+            };
+        }
+
+        function showAlert(messages) {
+            const banner = document.getElementById('alertBanner');
+            banner.innerHTML = '⚠️ ' + messages.join(' | ');
+            banner.classList.add('show');
+
+            if (document.hidden) {
+                showNotification('PC Dashboard Alert', messages.join('\n'));
+            }
+        }
+
+        function hideAlert() {
+            document.getElementById('alertBanner').classList.remove('show');
+        }
+
+        function showNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: '⚠️' });
+            } else if ('Notification' in window && Notification.permission !== 'denied') {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        new Notification(title, { body, icon: '⚠️' });
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && ws && ws.readyState === WebSocket.OPEN) {
+                hideAlert();
+            }
+        });
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history?hours=24');
+                const data = await response.json();
+                if (data.records && data.records.length > 0) {
+                    renderHistoryChart(data.records);
+                    showHistoryStats(data.records);
+                }
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        function renderHistoryChart(records) {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            const cpuHistory = records.map(r => r.cpu_percent);
+            const ramHistory = records.map(r => r.memory_percent);
+            const timeLabels = records.map(r => new Date(r.timestamp).toLocaleTimeString());
+
+            if (historyChart) {
+                historyChart.destroy();
+            }
+
+            historyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'CPU %',
+                            data: cpuHistory,
+                            borderColor: '#38bdf8',
+                            tension: 0.3,
+                            fill: false
+                        },
+                        {
+                            label: 'RAM %',
+                            data: ramHistory,
+                            borderColor: '#a855f7',
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 100, grid: { color: '#334155' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { labels: { color: '#e2e8f0' } } }
+                }
+            });
+        }
+
+        function showHistoryStats(records) {
+            const cpuValues = records.map(r => r.cpu_percent);
+            const ramValues = records.map(r => r.memory_percent);
+            const stats = document.getElementById('historyStats');
+            const avgCpu = (cpuValues.reduce((a, b) => a + b, 0) / cpuValues.length).toFixed(1);
+            const maxCpu = Math.max(...cpuValues).toFixed(1);
+            const avgRam = (ramValues.reduce((a, b) => a + b, 0) / ramValues.length).toFixed(1);
+            const maxRam = Math.max(...ramValues).toFixed(1);
+            stats.innerHTML = `Avg: CPU ${avgCpu}% | RAM ${avgRam}% | Peak: CPU ${maxCpu}% | RAM ${maxRam}%`;
+        }
+
+        document.getElementById('loadHistory').addEventListener('click', loadHistory);
+
+        connect();
+    </script>
+</body>
+</html>
