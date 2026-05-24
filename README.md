@@ -2,8 +2,6 @@
 
 Sistema de monitorización de métricas de máquina local con streaming en tiempo real via WebSocket.
 
-![Dashboard](https://i.imgur.com/example.png)
-
 ## Arquitectura
 
 ```
