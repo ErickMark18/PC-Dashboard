@@ -68,6 +68,15 @@ def get_metrics() -> dict:
                 if entries:
                     cpu_temp = entries[0].current
                     break
+    if cpu_temp is None:
+        try:
+            import wmi
+            w = wmi.WMI(namespace="root\WMI")
+            temps = w.MSAcpi_ThermalZoneTemperature()
+            if temps:
+                cpu_temp = float(temps[0].CurrentTemperature) / 10.0 - 273.15
+        except Exception:
+            pass
 
     gpu_metrics = _get_gpu_metrics()
     process_metrics = _get_process_metrics()
@@ -239,8 +248,8 @@ if __name__ == "__main__":
         print(f"  RAM: {metrics['memory_percent']}% ({metrics['memory_available_gb']} GB free)")
         print(f"  Disk: {metrics['disk_percent']}% ({metrics['disk_free_gb']} GB free)")
         print(
-            f"  Network: ↑{metrics['network_sent_mb']} MB ({metrics['network_speed_sent_mbps']} Mbps) | "
-            f"↓{metrics['network_recv_mb']} MB ({metrics['network_speed_recv_mbps']} Mbps)"
+            f"  Network: <{metrics['network_sent_mb']} MB ({metrics['network_speed_sent_mbps']} Mbps) | "
+            f">{metrics['network_recv_mb']} MB ({metrics['network_speed_recv_mbps']} Mbps)"
         )
         if metrics.get("gpu_available"):
             print(

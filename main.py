@@ -115,7 +115,7 @@ async def query_history(hours: int = Query(default=24, ge=1, le=168)):
 @app.get("/history/export")
 async def export_history(
     hours: int = Query(default=24, ge=1, le=168),
-    format: str = Query(default="csv", regex="^(csv|json)$"),
+    format: str = Query(default="csv", pattern="^(csv|json)$"),
 ):
     """Export historical metrics as CSV or JSON."""
     records = get_history(hours=hours)

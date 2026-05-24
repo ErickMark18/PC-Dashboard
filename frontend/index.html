@@ -74,6 +74,22 @@
             transition: all 0.2s ease; font-size: 1.2rem;
         }
         .icon-btn:hover { background: var(--accent-cyan); color: var(--bg-primary); }
+        .config-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 380px;
+            max-width: calc(100vw - 40px);
+            z-index: 100;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            display: none;
+        }
+        .config-panel.show { display: block; animation: slideIn 0.2s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -135,18 +151,31 @@
         .process-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; }
         .process-item:last-child { border-bottom: none; }
         .process-name { color: var(--text-secondary); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .process-value { font-family: 'JetBrains Mono', monospace; color: var(--accent-cyan); }
-        .config-panel, .alert-history, .peaks-section {
+        .process-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        .process-column { background: var(--bg-tertiary); border-radius: var(--radius-sm); padding: 16px; }
+        .process-column-cpu { border-left: 3px solid var(--accent-cyan); }
+        .process-column-mem { border-left: 3px solid var(--accent-purple); }
+        .process-column-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+        .process-column-icon { font-size: 1rem; }
+        .process-column-cpu .process-column-icon { color: var(--accent-cyan); }
+        .process-column-mem .process-column-icon { color: var(--accent-purple); }
+        .process-column-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .process-column-cpu .process-column-title { color: var(--accent-cyan); }
+        .process-column-mem .process-column-title { color: var(--accent-purple); }
+        .process-column-cpu .process-value { color: var(--accent-cyan); }
+        .process-column-mem .process-value { color: var(--accent-purple); }
+        .process-column-cpu .process-name { color: var(--text-secondary); }
+        .process-column-mem .process-name { color: var(--text-secondary); }
+        .config-panel {
             background: var(--bg-card);
             border-radius: var(--radius);
             padding: 24px;
-            margin-bottom: 24px;
             border: 1px solid var(--border-color);
             display: none;
         }
-        .config-panel.show, .alert-history.show, .peaks-section.show { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .config-panel h3, .alert-history h3, .peaks-section h3 { color: var(--accent-cyan); margin-bottom: 20px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .config-panel.show { display: block; animation: slideIn 0.2s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .config-panel h3 { color: var(--accent-cyan); margin-bottom: 20px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
         .config-item { display: flex; flex-direction: column; gap: 8px; }
         .config-item label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -165,11 +194,26 @@
         .btn-primary:hover { background: #06b6d4; transform: translateY(-1px); }
         .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-secondary:hover { border-color: var(--accent-cyan); }
+        .btn-secondary.active { background: rgba(34,211,238,0.15); border-color: var(--accent-cyan); color: var(--accent-cyan); }
         .export-btns { display: flex; gap: 12px; margin-top: 20px; }
         .alert-item { padding: 12px 16px; margin-bottom: 8px; background: var(--bg-tertiary); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-amber); }
         .alert-item-time { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
         .alert-item-msg { font-size: 0.85rem; color: var(--text-primary); }
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .data-section { margin-bottom: 24px; }
+        .data-section-header { display: flex; gap: 12px; margin-bottom: 16px; }
+        .btn-icon { margin-right: 6px; }
+        .alert-history, .peaks-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            border: 1px solid var(--border-color);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .alert-history h3, .peaks-section h3 { color: var(--accent-cyan); margin-bottom: 20px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .alert-history h3 span, .peaks-section h3 span { margin-right: 8px; }
         .peaks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
         .peak-item { background: var(--bg-tertiary); padding: 12px 16px; border-radius: var(--radius-sm); text-align: center; }
         .peak-item .peak-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; }
@@ -220,6 +264,11 @@
             <div class="value" id="gpuValue">-</div>
             <div class="unit">%</div>
         </div>
+        <div class="metric-card" id="gpuTempCard">
+            <div class="label">GPU Temp</div>
+            <div class="value" id="gpuTempValue">-</div>
+            <div class="unit">°C</div>
+        </div>
     </div>
     <div class="charts-container">
         <div class="chart-box">
@@ -255,12 +304,18 @@
     <div class="chart-box" style="margin-top: 20px;">
         <h3>Top Processes</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">By CPU</div>
+            <div class="process-column process-column-cpu">
+                <div class="process-column-header">
+                    <span class="process-column-icon">&#9889;</span>
+                    <span class="process-column-title">By CPU</span>
+                </div>
                 <div class="process-list" id="cpuProcessList"></div>
             </div>
-            <div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">By Memory</div>
+            <div class="process-column process-column-mem">
+                <div class="process-column-header">
+                    <span class="process-column-icon">&#128190;</span>
+                    <span class="process-column-title">By Memory</span>
+                </div>
                 <div class="process-list" id="memProcessList"></div>
             </div>
         </div>
@@ -301,22 +356,19 @@
             <button class="btn btn-secondary" id="exportJson">Export JSON</button>
         </div>
     </div>
-    <div class="peaks-section" id="peaksSection">
-        <h3>Historical Peaks</h3>
-        <div class="peaks-grid" id="peaksGrid"></div>
-    </div>
-    <div class="alert-history" id="alertHistory">
-        <h3>Alert History</h3>
-        <div id="alertList"></div>
+        <div class="alert-history" id="alertHistory">
+            <h3><span>&#9888;</span> Alert History</h3>
+            <div id="alertList"></div>
+        </div>
+        <div class="peaks-section" id="peaksSection">
+            <h3><span>&#9650;</span> Historical Peaks</h3>
+            <div class="peaks-grid" id="peaksGrid"></div>
+        </div>
     </div>
     <div class="chart-box" style="margin-top: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h3 style="margin: 0;">History (Last 24h)</h3>
-            <div style="display: flex; gap: 12px;">
-                <button class="btn btn-secondary" id="loadHistory">Load</button>
-                <button class="btn btn-secondary" id="toggleAlerts">Alerts</button>
-                <button class="btn btn-secondary" id="togglePeaks">Peaks</button>
-            </div>
+            <button class="btn btn-secondary" id="loadHistory">Load</button>
         </div>
         <div class="chart-wrapper" style="height: 150px;">
             <canvas id="historyChart"></canvas>
@@ -367,42 +419,55 @@
         }
 
         let ws;
-        function connect() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-            ws.onopen = () => { document.getElementById('statusDot').classList.remove('disconnected'); document.getElementById('statusText').textContent = 'Connected'; };
-            ws.onclose = () => { document.getElementById('statusDot').classList.add('disconnected'); document.getElementById('statusText').textContent = 'Disconnected'; ws.close(); };
-            ws.onerror = () => { ws.close(); };
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const m = data.metrics;
-                document.getElementById('cpuValue').textContent = m.cpu_percent?.toFixed(1) ?? '-';
-                document.getElementById('ramValue').textContent = m.memory_percent?.toFixed(1) ?? '-';
-                document.getElementById('diskValue').textContent = m.disk_percent?.toFixed(1) ?? '-';
-                document.getElementById('tempValue').textContent = m.cpu_temp != null ? m.cpu_temp.toFixed(1) : 'N/A';
-                const gpuValue = document.getElementById('gpuValue');
-                const gpuCard = document.getElementById('gpuCard');
-                if (m.gpu_available) {
-                    gpuValue.textContent = m.gpu_percent?.toFixed(1) ?? '-';
-                    gpuCard.style.display = 'block';
-                } else { gpuValue.textContent = 'N/A'; gpuCard.style.display = 'none'; }
-                document.getElementById('netSent').textContent = (m.network_sent_mb ?? 0).toFixed(1) + ' MB';
-                document.getElementById('netRecv').textContent = (m.network_recv_mb ?? 0).toFixed(1) + ' MB';
-                document.getElementById('netSpeedSent').textContent = (m.network_speed_sent_mbps ?? 0).toFixed(1) + ' Mbps';
-                document.getElementById('netSpeedRecv').textContent = (m.network_speed_recv_mbps ?? 0).toFixed(1) + ' Mbps';
-                updateMetricCard('cpuCard', m.cpu_percent ?? 0, thresholds.cpu);
-                updateMetricCard('ramCard', m.memory_percent ?? 0, thresholds.ram);
-                updateMetricCard('diskCard', m.disk_percent ?? 0, thresholds.disk);
-                if (m.gpu_available) updateMetricCard('gpuCard', m.gpu_percent ?? 0, thresholds.gpu);
-                renderProcesses(m.top_processes_cpu, m.top_processes_mem);
-                addLabel();
-                updateChart(cpuRamChart, cpuData, m.cpu_percent ?? 0);
-                updateChart(cpuRamChart, ramData, m.memory_percent ?? 0);
-                updateChart(diskGpuChart, diskData, m.disk_percent ?? 0);
-                updateChart(diskGpuChart, gpuData, m.gpu_percent ?? 0);
-                if (data.alerts?.length > 0) { showAlert(data.alerts); if (soundEnabled) playAlertSound(); }
-                else hideAlert();
-            };
+        async function connect() {
+            try {
+                const response = await fetch('/token', { method: 'POST' });
+                const data = await response.json();
+                const token = data.access_token;
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}/ws?token=${token}`);
+                ws.onopen = () => { document.getElementById('statusDot').classList.remove('disconnected'); document.getElementById('statusText').textContent = 'Connected'; };
+                ws.onclose = () => { document.getElementById('statusDot').classList.add('disconnected'); document.getElementById('statusText').textContent = 'Disconnected'; ws.close(); };
+                ws.onerror = () => { ws.close(); };
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    const m = data.metrics;
+                    document.getElementById('cpuValue').textContent = m.cpu_percent?.toFixed(1) ?? '-';
+                    document.getElementById('ramValue').textContent = m.memory_percent?.toFixed(1) ?? '-';
+                    document.getElementById('diskValue').textContent = m.disk_percent?.toFixed(1) ?? '-';
+                    document.getElementById('tempValue').textContent = m.cpu_temp != null ? m.cpu_temp.toFixed(1) : 'N/A';
+                    const gpuValue = document.getElementById('gpuValue');
+                    const gpuCard = document.getElementById('gpuCard');
+                    const gpuTempValue = document.getElementById('gpuTempValue');
+                    const gpuTempCard = document.getElementById('gpuTempCard');
+                    if (m.gpu_available) {
+                        gpuValue.textContent = m.gpu_percent?.toFixed(1) ?? '-';
+                        gpuCard.style.display = 'block';
+                        gpuTempValue.textContent = m.gpu_temp != null ? m.gpu_temp.toFixed(1) : '-';
+                        gpuTempCard.style.display = 'block';
+                    } else {
+                        gpuValue.textContent = 'N/A';
+                        gpuCard.style.display = 'none';
+                        gpuTempCard.style.display = 'none';
+                    }
+                    document.getElementById('netSent').textContent = (m.network_sent_mb ?? 0).toFixed(1) + ' MB';
+                    document.getElementById('netRecv').textContent = (m.network_recv_mb ?? 0).toFixed(1) + ' MB';
+                    document.getElementById('netSpeedSent').textContent = (m.network_speed_sent_mbps ?? 0).toFixed(1) + ' Mbps';
+                    document.getElementById('netSpeedRecv').textContent = (m.network_speed_recv_mbps ?? 0).toFixed(1) + ' Mbps';
+                    updateMetricCard('cpuCard', m.cpu_percent ?? 0, thresholds.cpu);
+                    updateMetricCard('ramCard', m.memory_percent ?? 0, thresholds.ram);
+                    updateMetricCard('diskCard', m.disk_percent ?? 0, thresholds.disk);
+                    if (m.gpu_available) updateMetricCard('gpuCard', m.gpu_percent ?? 0, thresholds.gpu);
+                    renderProcesses(m.top_processes_cpu, m.top_processes_mem);
+                    addLabel();
+                    updateChart(cpuRamChart, cpuData, m.cpu_percent ?? 0);
+                    updateChart(cpuRamChart, ramData, m.memory_percent ?? 0);
+                    updateChart(diskGpuChart, diskData, m.disk_percent ?? 0);
+                    updateChart(diskGpuChart, gpuData, m.gpu_percent ?? 0);
+                    if (data.alerts?.length > 0) { showAlert(data.alerts); if (soundEnabled) playAlertSound(); }
+                    else hideAlert();
+                };
+            } catch(e) { console.error('Connection failed:', e); }
         }
 
         function renderProcesses(cpuProcs, memProcs) {
@@ -422,9 +487,12 @@
 
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-theme'); });
         document.getElementById('configToggle').addEventListener('click', () => { document.getElementById('configPanel').classList.toggle('show'); });
-        document.getElementById('toggleAlerts').addEventListener('click', () => { document.getElementById('alertHistory').classList.toggle('show'); loadAlertHistory(); });
-        document.getElementById('togglePeaks').addEventListener('click', () => { document.getElementById('peaksSection').classList.toggle('show'); loadPeaks(); });
         document.getElementById('soundEnabled').addEventListener('change', (e) => { soundEnabled = e.target.checked; });
+
+        loadAlertHistory();
+        setInterval(loadAlertHistory, 10000);
+        loadPeaks();
+        setInterval(loadPeaks, 10000);
 
         async function loadAlertHistory() {
             try {
@@ -447,17 +515,6 @@
                     grid.innerHTML = data.peaks.map(p => `<div class="peak-item"><div class="peak-label">${metricNames[p.metric_name] || p.metric_name}</div><div class="peak-value">${p.peak_value.toFixed(1)}%</div></div>`).join('');
                 } else { grid.innerHTML = '<div class="empty-state">No peaks recorded yet</div>'; }
             } catch(e) { console.error('Failed to load peaks:', e); }
-        }
-
-        async function loadHistory() {
-            try {
-                const res = await fetch('/history?hours=24');
-                const data = await res.json();
-                if (data.records?.length > 0) {
-                    renderHistoryChart(data.records);
-                    showHistoryStats(data.records);
-                }
-            } catch(e) { console.error('Failed to load history:', e); }
         }
 
         function renderHistoryChart(records) {
@@ -486,7 +543,28 @@
             document.getElementById('historyStats').innerHTML = `Avg: CPU ${avgCpu}% | RAM ${avgRam}% | Peak: CPU ${maxCpu}% | RAM ${maxRam}%`;
         }
 
-        document.getElementById('loadHistory').addEventListener('click', loadHistory);
+        document.getElementById('loadHistory').addEventListener('click', async () => {
+            const btn = document.getElementById('loadHistory');
+            const originalText = btn.textContent;
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/history?hours=24');
+                const data = await res.json();
+                if (data.records?.length > 0) {
+                    renderHistoryChart(data.records);
+                    showHistoryStats(data.records);
+                } else {
+                    document.getElementById('historyStats').innerHTML = '<span style="color: var(--accent-amber);">No history data available yet. Data is recorded every 60 seconds when there are significant changes.</span>';
+                }
+            } catch(e) {
+                console.error('Failed to load history:', e);
+                document.getElementById('historyStats').innerHTML = '<span style="color: var(--accent-red);">Failed to load history data.</span>';
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
         document.getElementById('exportCsv').addEventListener('click', () => { window.location.href = '/history/export?format=csv'; });
         document.getElementById('exportJson').addEventListener('click', () => { window.location.href = '/history/export?format=json'; });
 
